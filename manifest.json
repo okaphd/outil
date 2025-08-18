@@ -1,9 +1,9 @@
 {
-	"id": "onodes",
-	"name": "Nodes",
+	"id": "utils",
+	"name": "Utils",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Placeholder",
+	"description": "Personal utilities",
 	"author": "aphdne",
 	"authorUrl": "https://github.com/aphdne",
 	"isDesktopOnly": false

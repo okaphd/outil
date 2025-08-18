@@ -1,0 +1,11 @@
+.ou-properties-container {
+	border-radius: var(--radius-s);
+}
+
+.ou-properties-field {
+	background-color: var(--background-secondary-alt);
+}
+
+.ou-properties-key {
+	background-color: var(--background-primary-alt);
+}

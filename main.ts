@@ -18,12 +18,19 @@ export default class Utils extends Plugin {
 
 							let field = container.createSpan({ text: "", cls: "ou-properties-field" });
 							for (let j in context.frontmatter[i]) {
-								field.innerHTML += context.frontmatter[i][j];
+								let text = context.frontmatter[i][j];
+								const link = [...text.matchAll(new RegExp("(?<=\\[\\[).*(?=\\]\\])", "gm"))][0];
+								console.log(link);
+
+								if (link) {
+									if (link[0]) {
+										text = `<a data-href="${link[0]}" href="${link[0]}" class="internal-link" target="_blank" rel="noopener nofollow">${link[0]}</a>`;
+									}
+								}
+								field.innerHTML += text;
 							}
 							field.innerHTML += " <br>";
 						}
-
-						console.log(el);
 
 						codeblock.replaceWith(el);
 					}

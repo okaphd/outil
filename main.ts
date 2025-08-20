@@ -7,6 +7,12 @@ function toHTML(input: string) {
 	if (link && link[0]) {
 		text = `<a data-href="${link[0]}" href="${link[0]}" class="internal-link" target="_blank" rel="noopener nofollow">${link[0]}</a>`;
 	}
+
+	const tag = [...text.matchAll(new RegExp("(?<=\\#).*", "gm"))][0];
+	if (tag && tag[0]) {
+		text = `<a href="#${tag[0]}" class="tag" target="_blank" rel="noopener nofollow">#${tag[0]}</a>`
+	}
+
 	return text;
 }
 
@@ -39,14 +45,20 @@ export default class Utils extends Plugin {
 
 						codeblock.replaceWith(el);
 					} else if (text === "%CHILDREN") {
-						const children = this.app.vault.getMarkdownFiles().filter((tfile) => {
+						let children = [];
+
+						this.app.vault.getMarkdownFiles().forEach((tfile) => {
+							let date = "-";
+
 							const fm = this.app.metadataCache.getFileCache(tfile).frontmatter
-							if (fm) {
-								if (fm.parents) {
-									return fm.parents.contains("[[" + this.app.workspace.getActiveFile().basename + "]]");
+							if (fm && fm.parents) {
+								if (fm.date) {
+									date = fm.date;
+								}
+								if (fm.parents.contains("[[" + this.app.workspace.getActiveFile().basename + "]]")) {
+									children.push([tfile.basename, date]);
 								}
 							}
-							return false;
 						});
 
 						if (children.length == 0) {
@@ -59,7 +71,7 @@ export default class Utils extends Plugin {
 
 						let header = table.createEl("thead")
 						let row = header.createEl("tr")
-						row.createEl("th", {text: "Children"});
+						row.createEl("th", {text: "Note"});
 						row.createEl("th", {text: "Date"});
 
 						let body = table.createEl("tbody")
@@ -67,15 +79,8 @@ export default class Utils extends Plugin {
 						for (const c of children) {
 							row = body.createEl("tr");
 							let t = row.createEl("td", {text: ""});
-							t.innerHTML = toHTML("[[" + c.basename + "]]");
-							const fm = this.app.metadataCache.getFileCache(c).frontmatter;
-							let date_text = "-";
-							if (fm) {
-								if (fm.date) {
-									date_text = fm.date;
-								}
-							}
-							row.createEl("td", {text: date_text});
+							t.innerHTML = toHTML("[[" + c[0] + "]]");
+							row.createEl("td", {text: c[1]});
 						}
 
 						codeblock.replaceWith(el);

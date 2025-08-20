@@ -11,6 +11,11 @@
 	background-color: var(--background-secondary-alt);
 }
 
+/* .ou-properties-key::after { */
+/* 	content: ":" */
+/* } */
+
 .ou-properties-key {
 	background-color: var(--background-primary-alt);
+	/* text-transform: capitalize; */
 }

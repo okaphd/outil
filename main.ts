@@ -1,23 +1,78 @@
-import { Plugin } from 'obsidian';
+import { Plugin, PluginSettingTab, Setting } from 'obsidian';
+
+interface Settings {
+  propertiesStyle: string;
+}
+
+const DEFAULT_SETTINGS: Partial<Settings> = {
+	propertiesStyle: "Default",
+};
+
+export class SettingsTab extends PluginSettingTab {
+	plugin: Utils;
+
+	constructor(app: App, plugin: Utils) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+	display(): void {
+		let { containerEl } = this;
+
+		containerEl.empty();
+
+		new Setting(containerEl)
+		 .setName("Properties Style")
+     .addDropdown((dropdown) =>
+        dropdown
+          .addOption('1', 'Default')
+          .addOption('2', 'Dataview')
+          .setValue(this.plugin.settings.propertiesStyle)
+          .onChange(async (value) => {
+             this.plugin.settings.propertiesStyle = value;
+             await this.plugin.saveSettings();
+          })
+		);
+	}
+
+}
 
 function toHTML(input: string) {
-	let text = input;
-	const link = [...text.matchAll(new RegExp("(?<=\\[\\[).*(?=\\]\\])", "gm"))][0];
+	const link = [...input.matchAll(new RegExp("(?<=\\[\\[).*(?=\\]\\])", "gm"))][0];
 
 	if (link && link[0]) {
-		text = `<a data-href="${link[0]}" href="${link[0]}" class="internal-link" target="_blank" rel="noopener nofollow">${link[0]}</a>`;
+		return toLink(link[0]);
 	}
 
-	const tag = [...text.matchAll(new RegExp("(?<=\\#).*", "gm"))][0];
+	const tag = [...input.matchAll(new RegExp("(?<=\\#).*", "gm"))][0];
 	if (tag && tag[0]) {
-		text = `<a href="#${tag[0]}" class="tag" target="_blank" rel="noopener nofollow">#${tag[0]}</a>`
+		return `<a href="#${tag[0]}" class="tag" target="_blank" rel="noopener nofollow">#${tag[0]}</a>`
 	}
 
-	return text;
+	return input;
+}
+
+function toLink(link: string, display: string = link) {
+	return `<a data-href="${link}" href="${link}" class="internal-link" target="_blank" rel="noopener nofollow">${display}</a>`;
+}
+
+function getChildren(file: TFile) {
+	let children: TFile[] = [];
+	this.app.vault.getMarkdownFiles().forEach((f: TFile) => {
+		const fm = this.app.metadataCache.getFileCache(f).frontmatter
+		if (fm && fm.parents && fm.parents.contains("[[" + file.basename + "]]")) {
+			children.push(f);
+		}
+	});
+	return children;
 }
 
 export default class Utils extends Plugin {
+	settings: Settings;
+
 	async onload() {
+		await this.loadSettings();
+
 		this.registerMarkdownPostProcessor((element, context) => {
 			const codeblocks = element.findAll('code');
 
@@ -27,17 +82,19 @@ export default class Utils extends Plugin {
 					if (text === "%PROPERTIES") {
 						let el = codeblock.createSpan({ cls: "ou-properties" });
 
+						const cls_suffix = this.settings.propertiesStyle == 2 ? "" : "-djs";
+
 						for (let i in context.frontmatter) {
-							let container = el.createSpan({ text: "", cls: "ou-properties-container" });
-							let key = container.createSpan({ text: "", cls: "ou-properties-key" });
-							let field = container.createSpan({ text: "", cls: "ou-properties-field" });
-							key.innerHTML += i;
+							let container =    el.createSpan({ text: "", cls: "ou-properties-container" + cls_suffix });
+							let key =   container.createSpan({ text: "", cls: "ou-properties-key" + cls_suffix       });
+							let field = container.createSpan({ text: "", cls: "ou-properties-field" + cls_suffix     });
+							key.innerHTML += "<strong>" + i + "</strong>";
 
 							if (Array.isArray(context.frontmatter[i])) {
 								for (let j in context.frontmatter[i]) {
 									field.innerHTML += toHTML(context.frontmatter[i][j]);
 								}
-							} else {
+							} else if (context.frontmatter[i] != null) {
 								field.innerHTML += toHTML(context.frontmatter[i]);
 							}
 							field.innerHTML += " <br>";
@@ -45,23 +102,20 @@ export default class Utils extends Plugin {
 
 						codeblock.replaceWith(el);
 					} else if (text === "%CHILDREN") {
-						let children = [];
+						let info = [];
 
-						this.app.vault.getMarkdownFiles().forEach((tfile) => {
+						getChildren(this.app.workspace.getActiveFile()).forEach((child) => {
 							let date = "-";
 
-							const fm = this.app.metadataCache.getFileCache(tfile).frontmatter
-							if (fm && fm.parents) {
-								if (fm.date) {
-									date = fm.date;
-								}
-								if (fm.parents.contains("[[" + this.app.workspace.getActiveFile().basename + "]]")) {
-									children.push([tfile.basename, date]);
-								}
+							const fm = this.app.metadataCache.getFileCache(child).frontmatter;
+							if (fm && fm.date) {
+								date = fm.date;
 							}
+
+							info.push([child.basename, date]);
 						});
 
-						if (children.length == 0) {
+						if (info.length == 0) {
 							codeblock.remove();
 							return;
 						}
@@ -76,10 +130,10 @@ export default class Utils extends Plugin {
 
 						let body = table.createEl("tbody")
 
-						for (const c of children) {
+						for (const c of info) {
 							row = body.createEl("tr");
 							let t = row.createEl("td", {text: ""});
-							t.innerHTML = toHTML("[[" + c[0] + "]]");
+							t.innerHTML = toLink(c[0], c[0].replaceAll(this.app.workspace.getActiveFile().basename, "").trim());
 							row.createEl("td", {text: c[1]});
 						}
 
@@ -88,6 +142,18 @@ export default class Utils extends Plugin {
 				}
 			}
 		});
+
+		this.addSettingTab(new SettingsTab(this.app, this));
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		console.log(this.settings);
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+		this.loadSettings();
 	}
 
 	onunload() {

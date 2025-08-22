@@ -11,11 +11,19 @@
 	background-color: var(--background-secondary-alt);
 }
 
-/* .ou-properties-key::after { */
-/* 	content: ":" */
-/* } */
-
 .ou-properties-key {
 	background-color: var(--background-primary-alt);
-	/* text-transform: capitalize; */
+}
+
+.ou-properties-field-djs {
+	background-color: var(--background-primary);
+}
+
+.ou-properties-key-djs {
+	background-color: var(--background-primary);
+	text-transform: capitalize;
+}
+
+.ou-properties-key-djs::after {
+	content: ": "
 }

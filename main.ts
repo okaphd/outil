@@ -92,7 +92,7 @@ export default class Utils extends Plugin {
 
 							if (Array.isArray(context.frontmatter[i])) {
 								for (let j in context.frontmatter[i]) {
-									field.innerHTML += toHTML(context.frontmatter[i][j]);
+									field.innerHTML += toHTML(context.frontmatter[i][j]) + " ";
 								}
 							} else if (context.frontmatter[i] != null) {
 								field.innerHTML += toHTML(context.frontmatter[i]);
@@ -148,7 +148,6 @@ export default class Utils extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		console.log(this.settings);
 	}
 
 	async saveSettings() {

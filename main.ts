@@ -85,18 +85,27 @@ export default class Utils extends Plugin {
 						const cls_suffix = this.settings.propertiesStyle == 2 ? "" : "-djs";
 
 						for (let i in context.frontmatter) {
+							if (i == "cover") {
+								let img = el.createSpan({ text: "" });
+								img.innerHTML = `<br><img src="${context.frontmatter[i]}" width="400">`;
+								continue;
+							}
+
 							let container =    el.createSpan({ text: "", cls: "ou-properties-container" + cls_suffix });
 							let key =   container.createSpan({ text: "", cls: "ou-properties-key" + cls_suffix       });
 							let field = container.createSpan({ text: "", cls: "ou-properties-field" + cls_suffix     });
-							key.innerHTML += "<strong>" + i + "</strong>";
+							const text = i.replace("imdb", "IMDb");
+							key.innerHTML += "<strong>" + text + "</strong>";
 
 							if (Array.isArray(context.frontmatter[i])) {
 								for (let j in context.frontmatter[i]) {
-									field.innerHTML += toHTML(context.frontmatter[i][j]) + " ";
+									field.innerHTML += toHTML(context.frontmatter[i][j]) + ", ";
 								}
+								field.innerHTML = field.innerHTML.substring(0, field.innerHTML.length-2);
 							} else if (context.frontmatter[i] != null) {
 								field.innerHTML += toHTML(context.frontmatter[i]);
 							}
+							console.log(field.innerHTML);
 							field.innerHTML += " <br>";
 						}
 

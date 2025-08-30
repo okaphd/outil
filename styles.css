@@ -1,25 +1,12 @@
-.ou-properties-field,
-.ou-properties-key {
-	padding: 0 0.5em 0;
-}
-
 .ou-properties-field {
-	background-color: var(--background-secondary-alt);
-}
-
-.ou-properties-key {
-	background-color: var(--background-primary-alt);
-}
-
-.ou-properties-field-djs {
 	background-color: var(--background-primary);
 }
 
-.ou-properties-key-djs {
+.ou-properties-key {
 	background-color: var(--background-primary);
 	text-transform: capitalize;
 }
 
-.ou-properties-key-djs::after {
+.ou-properties-key::after {
 	content: ": "
 }

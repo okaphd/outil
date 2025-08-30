@@ -1,19 +1,17 @@
 import { Plugin } from 'obsidian';
-import { Settings, DEFAULT_SETTINGS, SettingsTab } from './settings.ts';
+// import { Settings, DEFAULT_SETTINGS, SettingsTab } from './settings.ts';
 import { toHTML, internalLink, getChildren, create } from './utils.ts';
 
 export default class Utils extends Plugin {
-	settings: Settings;
+	// settings: Settings;
 
 	async onload() {
-		await this.loadSettings();
+		// await this.loadSettings();
 
 		this.registerMarkdownPostProcessor((element, context) => {
 			for (let codeblock of element.findAll('code')) {
 				if (codeblock.innerText === "%PROPERTIES") {
 					let el = codeblock.createSpan({ cls: "ou-properties" });
-
-					const cls_suffix = this.settings.propertiesStyle == 2 ? "" : "-djs";
 
 					for (let i in context.frontmatter) {
 						if (i == "cover") { // create image
@@ -32,8 +30,8 @@ export default class Utils extends Plugin {
 							fields += toHTML(context.frontmatter[i]);
 						}
 
-						create(el, `ou-properties-key${cls_suffix}`, `<strong>${key}</strong>`)
-						create(el, `ou-properties-field${cls_suffix}`, `${fields} <br>`)
+						create(el, `ou-properties-key`, `<strong>${key}</strong>`)
+						create(el, `ou-properties-field`, `${fields} <br>`)
 					}
 
 					codeblock.replaceWith(el);
@@ -78,17 +76,17 @@ export default class Utils extends Plugin {
 			}
 		});
 
-		this.addSettingTab(new SettingsTab(this.app, this));
+		// this.addSettingTab(new SettingsTab(this.app, this));
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-		this.loadSettings();
-	}
+	// async loadSettings() {
+	// 	this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	// }
+	//
+	// async saveSettings() {
+	// 	await this.saveData(this.settings);
+	// 	this.loadSettings();
+	// }
 
 	onunload() {
 	}

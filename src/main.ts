@@ -1,75 +1,6 @@
-import { Plugin, PluginSettingTab, Setting } from 'obsidian';
-
-function toHTML(input: string) {
-	const link = [...input.matchAll(new RegExp("(?<=\\[\\[).*(?=\\]\\])", "gm"))][0];
-
-	if (link && link[0]) {
-		return toLink(link[0]);
-	}
-
-	const tag = [...input.matchAll(new RegExp("(?<=\\#).*", "gm"))][0];
-	if (tag && tag[0]) {
-		return `<a href="#${tag[0]}" class="tag" target="_blank" rel="noopener nofollow">#${tag[0]}</a>`
-	}
-
-	return input;
-}
-
-function toLink(link: string, display: string = link) {
-	return `<a data-href="${link}" href="${link}" class="internal-link" target="_blank" rel="noopener nofollow">${display}</a>`;
-}
-
-function getChildren(file: TFile) {
-	let children: TFile[] = [];
-	this.app.vault.getMarkdownFiles().forEach((f: TFile) => {
-		const fm = this.app.metadataCache.getFileCache(f).frontmatter
-		if (fm && fm.parents && fm.parents.contains("[[" + file.basename + "]]")) {
-			children.push(f);
-		}
-	});
-	return children;
-}
-
-function create(el, p_cls, html) {
-	let e = el.createSpan({ cls: p_cls });
-	e.innerHTML = html;
-}
-
-interface Settings {
-  propertiesStyle: string;
-}
-
-const DEFAULT_SETTINGS: Partial<Settings> = {
-	propertiesStyle: "Default",
-};
-
-export class SettingsTab extends PluginSettingTab {
-	plugin: Utils;
-
-	constructor(app: App, plugin: Utils) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-
-	display(): void {
-		let { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-		 .setName("Properties Style")
-     .addDropdown((dropdown) =>
-        dropdown
-          .addOption('1', 'Default')
-          .addOption('2', 'Dataview')
-          .setValue(this.plugin.settings.propertiesStyle)
-          .onChange(async (value) => {
-             this.plugin.settings.propertiesStyle = value;
-             await this.plugin.saveSettings();
-          })
-		);
-	}
-}
+import { Plugin } from 'obsidian';
+import { Settings, DEFAULT_SETTINGS, SettingsTab } from './settings.ts';
+import { toHTML, internalLink, getChildren, create } from './utils.ts';
 
 export default class Utils extends Plugin {
 	settings: Settings;
@@ -90,6 +21,7 @@ export default class Utils extends Plugin {
 							continue;
 						}
 
+						let key = i.replace("imdb", "IMDb");
 						let fields = "";
 						if (Array.isArray(context.frontmatter[i])) {
 							for (let j in context.frontmatter[i]) {
@@ -100,7 +32,7 @@ export default class Utils extends Plugin {
 							fields += toHTML(context.frontmatter[i]);
 						}
 
-						create(el, `ou-properties-key${cls_suffix}`, `<strong>${i.replace("imdb", "IMDb")}</strong>`)
+						create(el, `ou-properties-key${cls_suffix}`, `<strong>${key}</strong>`)
 						create(el, `ou-properties-field${cls_suffix}`, `${fields} <br>`)
 					}
 
@@ -137,7 +69,7 @@ export default class Utils extends Plugin {
 					for (const c of info) {
 						row = body.createEl("tr");
 						let t = row.createEl("td", {text: ""});
-						t.innerHTML = toLink(c[0], c[0].replaceAll(this.app.workspace.getActiveFile().basename, "").trim());
+						t.innerHTML = internalLink(c[0], c[0].replaceAll(this.app.workspace.getActiveFile().basename, "").trim());
 						row.createEl("td", {text: c[1]});
 					}
 

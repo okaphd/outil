@@ -24,6 +24,8 @@ export default class Utils extends Plugin {
 							continue;
 						}
 
+						let allTags = false;
+
 						let key = i;
 						for (const k of this.replacees.keys()) {
 							key = key.replaceAll(k, this.replacees.get(k));
@@ -36,7 +38,12 @@ export default class Utils extends Plugin {
 							}
 							fields = fields.substring(0, fields.length-2);
 						} else if (context.frontmatter[i] != null) {
-							fields += toHTML(context.frontmatter[i]);
+							let s = toHTML(context.frontmatter[i]);
+							if (i.contains("date")) {
+								const arr = s.split("-");
+								s = `${arr[2]}/${arr[1]}/${arr[0].substring(2)}`;
+							}
+							fields += s;
 						}
 
 						create(el, `ou-properties-key`, `<strong>${key}</strong>`)

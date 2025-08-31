@@ -1,12 +1,15 @@
 import { Plugin } from 'obsidian';
-// import { Settings, DEFAULT_SETTINGS, SettingsTab } from './settings.ts';
+import { Settings, DEFAULT_SETTINGS, SettingsTab } from './settings.ts';
 import { toHTML, internalLink, getChildren, create } from './utils.ts';
 
 export default class Utils extends Plugin {
-	// settings: Settings;
+	settings: Settings;
+	replacees: Map<string, string> = new Map();
+	imageProperties: string[] = [];
+	omittedProperties: string[] = [];
 
 	async onload() {
-		// await this.loadSettings();
+		await this.loadSettings();
 
 		this.registerMarkdownPostProcessor((element, context) => {
 			for (let codeblock of element.findAll('code')) {
@@ -14,12 +17,18 @@ export default class Utils extends Plugin {
 					let el = codeblock.createSpan({ cls: "ou-properties" });
 
 					for (let i in context.frontmatter) {
-						if (i == "cover") { // create image
+						if (this.omittedProperties.contains(i)) {
+							continue
+						} else if (this.imageProperties.contains(i)) {
 							create(el, "", `<br><img src="${context.frontmatter[i]}" width="400">`)
 							continue;
 						}
 
-						let key = i.replace("imdb", "IMDb");
+						let key = i;
+						for (const k of this.replacees.keys()) {
+							key = key.replaceAll(k, this.replacees.get(k));
+						}
+
 						let fields = "";
 						if (Array.isArray(context.frontmatter[i])) {
 							for (let j in context.frontmatter[i]) {
@@ -76,17 +85,36 @@ export default class Utils extends Plugin {
 			}
 		});
 
-		// this.addSettingTab(new SettingsTab(this.app, this));
+		this.addSettingTab(new SettingsTab(this.app, this));
 	}
 
-	// async loadSettings() {
-	// 	this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	// }
-	//
-	// async saveSettings() {
-	// 	await this.saveData(this.settings);
-	// 	this.loadSettings();
-	// }
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+
+		this.replacees.clear();
+		this.settings.replacees.replaceAll("; ", ";").replaceAll(": ", ":").split(";").forEach((a) => {
+			if (a.trim() == "")
+				return;
+
+			const split = a.split(":");
+			this.replacees.set(split[0], split[1]);
+		});
+
+		this.imageProperties = [];
+		this.settings.imageProperties.replaceAll("; ", ";").split(";").forEach((a) => {
+			this.imageProperties.push(a);
+		});
+
+		this.omittedProperties = [];
+		this.settings.omittedProperties.replaceAll("; ", ";").split(";").forEach((a) => {
+			this.omittedProperties.push(a);
+		});
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+		this.loadSettings();
+	}
 
 	onunload() {
 	}

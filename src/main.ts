@@ -34,7 +34,12 @@ export default class Utils extends Plugin {
 						let fields = "";
 						if (Array.isArray(context.frontmatter[i])) {
 							for (let j in context.frontmatter[i]) {
-								fields += toHTML(context.frontmatter[i][j]) + ", ";
+								const field = context.frontmatter[i][j];
+								let s = toHTML(field) + ", ";
+								if (i == "tags" && !field.startsWith("#")) {
+									s = `${toHTML('#' + field)} `;
+								}
+								fields += s;
 							}
 							fields = fields.substring(0, fields.length-2);
 						} else if (context.frontmatter[i] != null) {

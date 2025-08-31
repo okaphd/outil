@@ -1,4 +1,8 @@
 export function toHTML(input: string) {
+	if (input.startsWith("http")) {
+		return `<a rel="noopener nofollow" class="external-link" href="${input}" target="_blank">${input}</a>`
+	}
+
 	const link = [...input.matchAll(new RegExp("(?<=\\[\\[).*(?=\\]\\])", "gm"))][0];
 
 	if (link && link[0]) {

@@ -1,6 +1,6 @@
 import { Plugin } from 'obsidian';
 import { Settings, DEFAULT_SETTINGS, SettingsTab } from './settings.ts';
-import { toHTML, internalLink, getChildren, create } from './utils.ts';
+import { toHTML, internalLink, getChildren, create, parseDate } from './utils.ts';
 
 export default class Utils extends Plugin {
 	settings: Settings;
@@ -36,18 +36,21 @@ export default class Utils extends Plugin {
 							for (let j in context.frontmatter[i]) {
 								const field = context.frontmatter[i][j];
 								let s = toHTML(field) + ", ";
+
 								if (i == "tags" && !field.startsWith("#")) {
-									s = `${toHTML('#' + field)} `;
+									s = `${toHTML('#' + field)}, `;
 								}
+
 								fields += s;
 							}
 							fields = fields.substring(0, fields.length-2);
 						} else if (context.frontmatter[i] != null) {
 							let s = toHTML(context.frontmatter[i]);
+
 							if (i.contains("date")) {
-								const arr = s.split("-");
-								s = `${arr[2]}/${arr[1]}/${arr[0].substring(2)}`;
+								s = parseDate(s);
 							}
+
 							fields += s;
 						}
 
@@ -80,17 +83,37 @@ export default class Utils extends Plugin {
 
 					let header = table.createEl("thead")
 					let row = header.createEl("tr")
-					row.createEl("th", {text: "Note"});
-					row.createEl("th", {text: "Date"});
+					row.createEl("th", {text: "Children"});
+					// row.createEl("th", {text: "Date"});
 
 					let body = table.createEl("tbody")
 
 					for (const c of info) {
 						row = body.createEl("tr");
-						let t = row.createEl("td", {text: ""});
-						t.innerHTML = internalLink(c[0], c[0].replaceAll(this.app.workspace.getActiveFile().basename, "").trim());
-						row.createEl("td", {text: c[1]});
+						let t = row.createEl("td", { text: "" });
+						t.innerHTML = internalLink(c[0]);
+						// row.createEl("td", { text: parseDate(c[1]) });
 					}
+
+					codeblock.replaceWith(el);
+				} else if (codeblock.innerText === "%CHILDREN_TEXT") {
+					let children = getChildren(this.app.workspace.getActiveFile()).reverse();
+
+					if (children.length == 0) {
+						codeblock.remove();
+						return;
+					}
+
+					let el = codeblock.createSpan({ cls: "ou-properties" });
+
+					let childrenHTML = "";
+					children.forEach(c => {
+						childrenHTML += internalLink(c.basename) + ", ";
+					});
+					childrenHTML = childrenHTML.substring(0, childrenHTML.length-2);
+
+					create(el, `ou-properties-key`, `<strong>Children</strong>`)
+					create(el, `ou-properties-field`, `${childrenHTML} <br>`)
 
 					codeblock.replaceWith(el);
 				}

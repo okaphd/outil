@@ -1,10 +1,12 @@
 export function toHTML(input: string) {
+	input = `${input}`;
+	console.log(input);
+
 	if (input.startsWith("http")) {
 		return `<a rel="noopener nofollow" class="external-link" href="${input}" target="_blank">${input}</a>`
 	}
 
 	const link = [...input.matchAll(new RegExp("(?<=\\[\\[).*(?=\\]\\])", "gm"))][0];
-
 	if (link && link[0]) {
 		return internalLink(link[0]);
 	}
@@ -37,3 +39,7 @@ export function create(el, p_cls, html) {
 	e.innerHTML = html;
 }
 
+export function parseDate(date: string) {
+	const arr = date.split("-");
+	return `${arr[2]}/${arr[1]}/${arr[0].substring(2)}`;
+}

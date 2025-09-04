@@ -1,13 +1,13 @@
 import { PluginSettingTab, Setting } from 'obsidian'
 
 export interface Settings {
-  replacees: string;
+  displayNames: string;
 	imageProperties: string;
 	omittedProperties: string;
 }
 
 export const DEFAULT_SETTINGS: Partial<Settings> = {
-	replacees: "imdb: IMDb",
+	displayNames: "imdb: IMDb",
 	imageProperties: "cover",
 	omittedProperties: "dont display",
 };
@@ -26,14 +26,14 @@ export class SettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("Replacees")
+			.setName("Display names")
 			.setDesc("Replace property names via a key:value pair")
 			.addText((text) => {
 				text
 					.setPlaceholder("imdb: IMDb; release date: Released; ...")
-					.setValue(this.plugin.settings.replacees)
+					.setValue(this.plugin.settings.displayNames)
 					.onChange(async (value) => {
-						this.plugin.settings.replacees = value;
+						this.plugin.settings.displayNames = value;
 						await this.plugin.saveSettings();
 					});
 			});

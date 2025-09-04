@@ -1,6 +1,5 @@
 export function toHTML(input: string) {
 	input = `${input}`;
-	console.log(input);
 
 	if (input.startsWith("http")) {
 		return `<a rel="noopener nofollow" class="external-link" href="${input}" target="_blank">${input}</a>`

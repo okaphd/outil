@@ -4,7 +4,7 @@ import { toHTML, internalLink, getChildren, create, parseDate } from './utils.ts
 
 export default class Utils extends Plugin {
 	settings: Settings;
-	replacees: Map<string, string> = new Map();
+	displayNames: Map<string, string> = new Map();
 	imageProperties: string[] = [];
 	omittedProperties: string[] = [];
 
@@ -20,15 +20,16 @@ export default class Utils extends Plugin {
 						if (this.omittedProperties.contains(i)) {
 							continue
 						} else if (this.imageProperties.contains(i)) {
-							create(el, "", `<br><img src="${context.frontmatter[i]}" width="400">`)
+							if (i.startsWith("http"))
+								create(el, "", `<br><img src="${context.frontmatter[i]}" width="400">`);
 							continue;
 						}
 
 						let allTags = false;
 
 						let key = i;
-						for (const k of this.replacees.keys()) {
-							key = key.replaceAll(k, this.replacees.get(k));
+						for (const k of this.displayNames.keys()) {
+							key = key.replaceAll(k, this.displayNames.get(k));
 						}
 
 						let fields = "";
@@ -126,13 +127,13 @@ export default class Utils extends Plugin {
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
-		this.replacees.clear();
-		this.settings.replacees.replaceAll("; ", ";").replaceAll(": ", ":").split(";").forEach((a) => {
+		this.displayNames.clear();
+		this.settings.displayNames.replaceAll("; ", ";").replaceAll(": ", ":").split(";").forEach((a) => {
 			if (a.trim() == "")
 				return;
 
 			const split = a.split(":");
-			this.replacees.set(split[0], split[1]);
+			this.displayNames.set(split[0], split[1]);
 		});
 
 		this.imageProperties = [];
